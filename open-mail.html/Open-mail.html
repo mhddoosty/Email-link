@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="fa">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>باز کردن اپ ایمیل</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;direction:rtl;padding:24px;text-align:center}
+    a{display:inline-block;margin-top:18px;padding:10px 18px;border-radius:8px;text-decoration:none;border:1px solid #ccc}
+  </style>
+</head>
+<body>
+  <h2>در حال باز کردن اپ ایمیل...</h2>
+  <p id="note">اگر اپ ایمیل باز نشد، از لینک پایین استفاده کنید.</p>
+
+  <p><a id="manual" href="#" target="_blank" rel="noopener">باز کردن اپ ایمیل (دستی)</a></p>
+
+<script>
+(function(){
+  // === تنظیمات — ایمیل مقصد / موضوع / متن ===
+  var to = "aramshow.info@gmail.com";
+  var subject = ""; // در صورت نیاز متن داخل " " را تغییر بده
+  var body = "";    // در صورت نیاز متن داخل " " را تغییر بده
+
+  function esc(s){ return encodeURIComponent(s||""); }
+  var mailto = "mailto:" + to + "?subject=" + esc(subject) + "&body=" + esc(body);
+  document.getElementById("manual").href = mailto;
+
+  // ترفند: اول سعی کن به intent اندروید بزنی (اگر Chrome/Android)
+  var ua = navigator.userAgent || "";
+  var isAndroid = /Android/i.test(ua);
+  var isIOS = /iPhone|iPad|iPod/i.test(ua);
+
+  // زمان انتظار برای fallback (میلی‌ثانیه)
+  var FALLBACK_DELAY = 1000;
+
+  // تابع کمکی: باز کردن URL با روش‌هایی که شانس خروج از in-app browser رو بالا می‌برن
+  function tryOpen(url){
+    // باز کردن در پنجره جدید (چون بعضی in-app browsers اجازه میدن که با target _blank به مرورگر اصلی برن)
+    var a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    // بعضی مرورگرها نیاز دارن المان به داکیومنت اضافه بشه تا کار کنه
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  if (isAndroid) {
+    // تلاش برای باز کردن Gmail با intent (اگر نصب باشه باز می‌کنه)
+    // اگر Gmail نصب نباشه، مرورگر معمولاً پیام خطا می‌ده — پس بعد از تأخیر fallback می‌کنیم.
+    var intentUri = "intent://compose?to=" + to + "#Intent;scheme=mailto;package=com.google.android.gm;end";
+    try {
+      tryOpen(intentUri);
+    } catch(e){}
+    // بعد از تأخیر fallback به mailto
+    setTimeout(function(){ tryOpen(mailto); }, FALLBACK_DELAY);
+    return;
+  }
+
+  // iOS و دسکتاپ: مستقیم mailto
+  try {
+    tryOpen(mailto);
+  } catch(e){}
+  // اگر بعد از تأخیر هنوز در همین صفحه‌ایم، پیام را به‌روزرسانی کن
+  setTimeout(function(){
+    document.getElementById('note').textContent = "اگر اپ ایمیل باز نشد، روی دکمهٔ پایین بزن.";
+  }, 800);
+
+})();
+</script>
+</body>
+</html>
